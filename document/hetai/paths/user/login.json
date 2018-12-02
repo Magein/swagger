@@ -1,0 +1,36 @@
+{
+  "user/login": {
+    "post": {
+      "summary": "用户登录",
+      "description": "",
+      "consumes": [
+        "application/x-www-form-urlencoded"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "parameters": [
+        {
+          "in": "formData",
+          "name": "username",
+          "description": "用户姓名",
+          "required": true
+        }
+      ],
+      "responses": {
+        "200": {
+          "type": "object",
+          "description": "返回值",
+          "properties": {
+            "code": {
+              "$ref": "#/definitions/code"
+            },
+            "msg": {
+              "$ref": "#/definitions/msg"
+            }
+          }
+        }
+      }
+    }
+  }
+}

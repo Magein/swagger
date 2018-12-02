@@ -1,0 +1,6 @@
+{
+  "msg": {
+    "type": "string",
+    "description": "错误信息"
+  }
+}

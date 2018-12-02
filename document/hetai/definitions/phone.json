@@ -1,0 +1,9 @@
+{
+  "phone": {
+    "type": "integer",
+    "description": "手机号码",
+    "name": "phone",
+    "required": false,
+    "in": "formData"
+  }
+}

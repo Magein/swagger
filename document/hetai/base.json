@@ -1,0 +1,28 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "",
+    "version": "1.0.0",
+    "title": "和泰苦荞"
+  },
+  "host": "http://106.12.201.55/",
+  "basePath": "/v2",
+  "tags": [
+    {
+      "name": "user",
+      "description": "用户登录，登出"
+    },
+    {
+      "name": "user_center",
+      "description": "用户中心"
+    },
+    {
+      "name": "order",
+      "description": "订单"
+    },
+    {
+      "name": "finance",
+      "description": "财务"
+    }
+  ]
+}

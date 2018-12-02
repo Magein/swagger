@@ -1,0 +1,6 @@
+{
+  "code": {
+    "type": "integer",
+    "description": "错误代码"
+  }
+}
