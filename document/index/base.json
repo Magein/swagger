@@ -3,7 +3,7 @@
   "info": {
     "description": "",
     "version": "1.0.0",
-    "title": "和泰苦荞"
+    "title": "swagger在线api接口文档"
   },
   "host": "http://106.12.201.55/",
   "basePath": "/v2",

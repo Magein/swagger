@@ -1,35 +1,38 @@
 <?php
 
+namespace Swagger;
 
-class Swagger
+class Api
 {
 
-    public $api_doc_path = './document';
-
-    public function index()
+    public function fetch($json_uri, $html_path = './src')
     {
-        $doc_name = isset($_GET['doc_name']) ? $_GET['doc_name'] : '';
+        $html = file_get_contents($html_path . '/index.html');
 
-        if (empty($doc_name)) {
-            echo '缺少项目名称';
-            exit();
-        }
+        $html = preg_replace([
+            '/\{\$json_uri\}/',
+            '/\{\$static\}/',
+        ], [
+            $json_uri,
+            $html_path
+        ], $html);
 
-        $index = file_get_contents('./index.html');
-
-        echo str_replace('{$doc_name}', $doc_name, $index);;
-        die();
+        return $html;
     }
 
-    public function doJson()
+    public function getJson($doc_file_path, $module_name)
     {
-        $doc_name = isset($_GET['doc_name']) ? $_GET['doc_name'] : '';
-
-        if (empty($doc_name)) {
+        if (empty($doc_file_path) || empty($module_name)) {
+            echo '参数错误';
             exit();
         }
 
-        $doc_path = $this->getPath($this->api_doc_path, $doc_name);
+        $doc_path = $this->getPath($doc_file_path, $module_name);
+
+        if (!is_dir($doc_path)) {
+            echo '接口文档路径错误';
+            exit();
+        }
 
         $definitions = 'definitions';
 
@@ -39,7 +42,7 @@ class Swagger
         $swagger_data = $this->getFileContents($base_json);
 
         // 公共的字段信息
-        $common_definitions = $this->getPath($this->api_doc_path, 'common', $definitions);
+        $common_definitions = $this->getPath($doc_file_path, 'common', $definitions);
 
         // 项目定义的字段信息
         $doc_definitions = $this->getPath($doc_path, $definitions);
@@ -70,6 +73,7 @@ class Swagger
 
             $item = $this->getFileContents($item);
 
+            // 处理标签
             if (!isset($item[$key]['post']['tags'])) {
                 $item[$key]['post']['tags'][] = $dir_name;
             }
@@ -79,9 +83,7 @@ class Swagger
 
         $swagger_json = json_encode($swagger_data, JSON_UNESCAPED_UNICODE);
 
-//        echo str_replace('\\', '', $swagger_json);
-        echo $swagger_json;
-        die();
+        return str_replace('\\/', '/', $swagger_json);
     }
 
     /**
@@ -128,14 +130,6 @@ class Swagger
 
         return $result;
     }
-}
-
-$do_json = isset($_GET['do_json']) ? $_GET['do_json'] : '';
-$api_document = new Swagger();
-if ($do_json) {
-    $api_document->doJson();
-} else {
-    $api_document->index();
 }
 
 
