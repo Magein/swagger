@@ -4,17 +4,26 @@ namespace Swagger;
 
 class Api
 {
-
-    public function fetch($json_uri, $html_path = './src')
+    public function fetch($json_uri, $static = '')
     {
-        $html = file_get_contents($html_path . '/index.html');
+        if (empty($static)) {
+            $document_root = $_SERVER['DOCUMENT_ROOT'];
+
+            $document_root = $this->replaceSeparator($document_root);
+
+            $static = $this->replaceSeparator(__DIR__);
+
+            $static = str_replace($document_root, '', $static);
+        }
+
+        $html = file_get_contents('.' . $static . '/index.html');
 
         $html = preg_replace([
             '/\{\$json_uri\}/',
             '/\{\$static\}/',
         ], [
             $json_uri,
-            $html_path
+            './' . $static
         ], $html);
 
         return $html;
@@ -84,6 +93,15 @@ class Api
         $swagger_json = json_encode($swagger_data, JSON_UNESCAPED_UNICODE);
 
         return str_replace('\\/', '/', $swagger_json);
+    }
+
+    /**
+     * @param $directory
+     * @return mixed
+     */
+    public function replaceSeparator($directory)
+    {
+        return str_replace('\\', '/', $directory);
     }
 
     /**
