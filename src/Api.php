@@ -1,32 +1,63 @@
 <?php
 
-namespace Swagger;
+namespace SwaggerApi;
 
 class Api
 {
-    public function fetch($json_uri, $static = '')
+
+    /**
+     * @var SwaggerData $swaggerData
+     */
+    private $swaggerData;
+
+    private $assign = [];
+
+    public function __construct(SwaggerData $swaggerData)
     {
-        if (empty($static)) {
-            $document_root = $_SERVER['DOCUMENT_ROOT'];
+        $this->swaggerData = $swaggerData;
+    }
 
-            $document_root = $this->replaceSeparator($document_root);
+    /**
+     * @param $name
+     * @param $value
+     * @return array
+     */
+    private function assign($name, $value)
+    {
+        $this->assign[$name] = $value;
 
-            $static = $this->replaceSeparator(__DIR__);
+        return $this->assign;
+    }
 
-            $static = str_replace($document_root, '', $static);
+    /**
+     * @param $html
+     * @return null|string|string[]
+     */
+    private function replaceAssign($html)
+    {
+        if ($this->assign) {
+            foreach ($this->assign as $name => $value) {
+                $html = preg_replace('/\{\$' . $name . '\}/', $value, $html);
+            }
         }
 
-        $html = file_get_contents('.' . $static . '/index.html');
-
-        $html = preg_replace([
-            '/\{\$json_uri\}/',
-            '/\{\$static\}/',
-        ], [
-            $json_uri,
-            './' . $static
-        ], $html);
-
         return $html;
+    }
+
+    /**
+     * @param $json_data_url
+     * @return null|string|string[]
+     */
+    public function display($json_data_url)
+    {
+        $html = file_get_contents(__DIR__.'/index.html');
+        if ($json_data_url) {
+            $this->swaggerData->setJsonDataUrl($json_data_url);
+        }
+        $this->assign('title', $this->swaggerData->getTitle());
+        $this->assign('json_data_url', $json_data_url);
+
+        return $this->replaceAssign($html);
     }
 
     public function getJson($doc_file_path, $module_name)
@@ -93,15 +124,6 @@ class Api
         $swagger_json = json_encode($swagger_data, JSON_UNESCAPED_UNICODE);
 
         return str_replace('\\/', '/', $swagger_json);
-    }
-
-    /**
-     * @param $directory
-     * @return mixed
-     */
-    public function replaceSeparator($directory)
-    {
-        return str_replace('\\', '/', $directory);
     }
 
     /**

@@ -1,0 +1,21 @@
+{
+  "name": "magein/swagger",
+  "description": "基于swagger-ui的文档",
+  "type": "library",
+  "homepage": "https://github.com/magein/swagger",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "xiaomage",
+      "email": "1154699897@qq.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "SwaggerApi": "src/"
+    }
+  }
+}
