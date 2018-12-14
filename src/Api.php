@@ -12,8 +12,15 @@ class Api
 
     private $assign = [];
 
-    public function __construct(SwaggerData $swaggerData)
+    /**
+     * Api constructor.
+     * @param SwaggerData|null $swaggerData
+     */
+    public function __construct(SwaggerData $swaggerData = null)
     {
+        if ($swaggerData == null) {
+            $swaggerData = new SwaggerData();
+        }
         $this->swaggerData = $swaggerData;
     }
 
