@@ -9,6 +9,10 @@
   "basePath": "/v2",
   "tags": [
     {
+      "name": "basic",
+      "description": "基础接口"
+    },
+    {
       "name": "user",
       "description": "用户登录，登出"
     },

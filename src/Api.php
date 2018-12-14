@@ -50,7 +50,7 @@ class Api
      */
     public function display($json_data_url)
     {
-        $html = file_get_contents(__DIR__.'/index.html');
+        $html = file_get_contents(__DIR__ . '/index.html');
         if ($json_data_url) {
             $this->swaggerData->setJsonDataUrl($json_data_url);
         }
@@ -83,7 +83,6 @@ class Api
 
         // 公共的字段信息
         $common_definitions = $this->getPath($doc_file_path, 'common', $definitions);
-
         // 项目定义的字段信息
         $doc_definitions = $this->getPath($doc_path, $definitions);
 
@@ -98,8 +97,10 @@ class Api
             }
         }
 
+        $common_paths = $this->getPath($doc_file_path, 'common', $paths);
         $doc_paths = $this->getPath($doc_path, $paths);
         $result = [];
+        $this->getFile($common_paths, $result);
         $this->getFile($doc_paths, $result);
 
         // 加载接口信息
@@ -109,9 +110,14 @@ class Api
 
             $dir_name = pathinfo($path_info['dirname'], PATHINFO_FILENAME);
 
-            $key = $dir_name . '/' . $path_info['filename'];
-
             $item = $this->getFileContents($item);
+
+            $key = array_keys($item);
+            $key = array_shift($key);
+
+            if ($dir_name == 'paths') {
+                $dir_name = substr($key, 0, strpos($key, '/'));
+            }
 
             // 处理标签
             if (!isset($item[$key]['post']['tags'])) {
