@@ -146,7 +146,7 @@ class Api
     private function getPath(...$_)
     {
         if ($_) {
-            return implode('/', $_);
+            return realpath(implode('/', $_));
         }
         return '';
     }
@@ -166,6 +166,11 @@ class Api
     private function getFile($file_name, &$result)
     {
         $handle = opendir($file_name);
+
+        if (!is_resource($handle)) {
+            return $result;
+        }
+
         while ($item = readdir($handle)) {
             if ($item == '.' || $item == '..') {
                 continue;
