@@ -58,8 +58,8 @@ class Api
     public function display($json_data_url)
     {
         $html = file_get_contents(__DIR__ . '/index.html');
-        if ($json_data_url) {
-            $this->swaggerData->setJsonDataUrl($json_data_url);
+        if (empty($json_data_url)) {
+            $json_data_url = $this->swaggerData->getJsonDataUrl();
         }
         $this->assign('title', $this->swaggerData->getTitle());
         $this->assign('json_data_url', $json_data_url);
@@ -67,7 +67,12 @@ class Api
         return $this->replaceAssign($html);
     }
 
-    public function getJson($doc_file_path, $module_name)
+    /**
+     * @param $doc_file_path
+     * @param $module_name
+     * @return array|mixed
+     */
+    private function readFile($doc_file_path, $module_name)
     {
         if (empty($doc_file_path) || empty($module_name)) {
             echo '参数错误';
@@ -134,9 +139,41 @@ class Api
             $swagger_data[$paths][$key] = $item[$key];
         }
 
-        $swagger_json = json_encode($swagger_data, JSON_UNESCAPED_UNICODE);
+        return $swagger_data;
+    }
 
-        return str_replace('\\/', '/', $swagger_json);
+    /**
+     * 获取数组数据
+     * @param $doc_file_path
+     * @param $module_name
+     * @return array|mixed
+     */
+    public function getData($doc_file_path, $module_name)
+    {
+        return $this->readFile($doc_file_path, $module_name);
+    }
+
+    /**
+     * 获取json数据
+     * @param $doc_file_path
+     * @param $module_name
+     * @return mixed
+     */
+    public function getJson($doc_file_path, $module_name)
+    {
+        $data = $this->getData($doc_file_path, $module_name);
+
+        return $this->removeTransferred(json_encode($data));
+    }
+
+    /**
+     * 消除转义字符
+     * @param $json
+     * @return mixed
+     */
+    public function removeTransferred($json)
+    {
+        return str_replace('\\/', '/', $json);
     }
 
     /**
