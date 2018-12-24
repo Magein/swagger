@@ -27,7 +27,7 @@
     }
     
     // 剔除转义字符，此方法跟getJson输出的代码一致（为更改$data的情况下）
-    echo $swagger->removeTransferred(json_encode($data));
+    echo $swagger->removeTransferred(json_encode($data,JSON_UNESCAPED_UNICODE));
     
     
     // 直接获取json数据（可解析的）
