@@ -12,6 +12,8 @@ class Api
 
     private $assign = [];
 
+    private $error = '';
+
     /**
      * Api constructor.
      * @param SwaggerData|null $swaggerData
@@ -22,6 +24,14 @@ class Api
             $swaggerData = new SwaggerData();
         }
         $this->swaggerData = $swaggerData;
+    }
+
+    /**
+     * @return string
+     */
+    public function getError()
+    {
+        return $this->error;
     }
 
     /**
@@ -69,39 +79,33 @@ class Api
 
     /**
      * @param $doc_file_path
-     * @param $module_name
-     * @return array|mixed
+     * @return array|mixed|bool
      */
-    private function readFile($doc_file_path, $module_name)
+    private function readFile($doc_path)
     {
-        if (empty($doc_file_path) || empty($module_name)) {
-            echo '参数错误';
-            exit();
-        }
-
-        $doc_path = $this->getPath($doc_file_path, $module_name);
-
-        if (!is_dir($doc_path)) {
-            echo '接口文档路径错误';
-            exit();
-        }
-
+        // 定义的字段信息
         $definitions = 'definitions';
-
+        // 存放文档的路径信息
         $paths = 'paths';
 
-        $base_json = $this->getPath($doc_path, 'base.json');
-        $swagger_data = $this->getFileContents($base_json);
+        // 获取配置信息数据
+        $main_json = $this->getPath($doc_path, 'main.json');
+        $swagger_data = $this->getFileContents($main_json);
 
-        // 公共的字段信息
-        $common_definitions = $this->getPath($doc_file_path, 'common', $definitions);
-        // 项目定义的字段信息
-        $doc_definitions = $this->getPath($doc_path, $definitions);
+        // 自定义的公共的字段信息
+        $common_definitions = $this->getPath(pathinfo($doc_path, PATHINFO_DIRNAME), 'common', $definitions);
 
+        // 模块中定义的字段信息
+        $module_definitions = $this->getPath($doc_path, $definitions);
+
+        /**
+         * 读取自定义的字段信息，包含公共的和模块对应的
+         *
+         * 从文件中读取，并且添加到main数组中
+         */
         $result = [];
         $this->getFile($common_definitions, $result);
-        $this->getFile($doc_definitions, $result);
-
+        $this->getFile($module_definitions, $result);
         if ($result) {
             foreach ($result as $item) {
                 $key = pathinfo($item, PATHINFO_FILENAME);
@@ -109,34 +113,52 @@ class Api
             }
         }
 
-        $common_paths = $this->getPath($doc_file_path, 'common', $paths);
-        $doc_paths = $this->getPath($doc_path, $paths);
+        /**
+         * 读取用于声明接口文档的文件信息，放到main数组中，用于最终的文档渲染
+         */
+        $common_paths = $this->getPath(pathinfo($doc_path, PATHINFO_DIRNAME), 'common', $paths);
+        $module_paths = $this->getPath($doc_path, $paths);
         $result = [];
         $this->getFile($common_paths, $result);
-        $this->getFile($doc_paths, $result);
+        $this->getFile($module_paths, $result);
 
-        // 加载接口信息
-        foreach ($result as $item) {
 
-            $path_info = pathinfo($item);
+        /**
+         * @param $url
+         * @param $tag
+         * @param $data
+         */
+        $concat = function ($url, $tag, $data) use (&$swagger_data, $paths) {
+            $data['post'] = array_merge(['tags' => [$tag]], $data['post']);
+            // 直接去掉前面的/ 在追加进去，防止文档中没有写
+            $url = '/' . ltrim($url, '/');
+            $swagger_data[$paths][$url] = $data;
+        };
+        foreach ($result as $file) {
 
-            $dir_name = pathinfo($path_info['dirname'], PATHINFO_FILENAME);
+            $file_info = pathinfo($file);
 
-            $item = $this->getFileContents($item);
+            $data = $this->getFileContents($file);
 
-            $key = array_keys($item);
-            $key = array_shift($key);
-
-            if ($dir_name == 'paths') {
-                $dir_name = substr($key, 0, strpos($key, '/'));
+            if (isset($data['post'])) {
+                $tag = pathinfo($file_info['dirname'], PATHINFO_BASENAME);
+                $url = $tag . '/' . $file_info['filename'];
+                $concat($url, $tag, $data);
+            } else {
+                foreach ($data as $key => $val) {
+                    if ($key) {
+                        $key = explode('/', $key);
+                        $key = array_values(array_filter($key));
+                        $tag = pathinfo($file_info['dirname'], PATHINFO_BASENAME);
+                        if (count($key) == 1) {
+                            $url = pathinfo($file_info['dirname'], PATHINFO_BASENAME) . '/' . $key[0];
+                        } else {
+                            $url = $key[0] . '/' . $key[1];
+                        }
+                        $concat($url, $tag, $val);
+                    }
+                }
             }
-
-            // 处理标签
-            if (!isset($item[$key]['post']['tags'])) {
-                $item[$key]['post']['tags'][] = $dir_name;
-            }
-
-            $swagger_data[$paths][$key] = $item[$key];
         }
 
         return $swagger_data;
@@ -145,12 +167,11 @@ class Api
     /**
      * 获取数组数据
      * @param $doc_file_path
-     * @param $module_name
-     * @return array|mixed
+     * @return array|bool|mixed
      */
-    public function getData($doc_file_path, $module_name)
+    public function getData($doc_file_path)
     {
-        return $this->readFile($doc_file_path, $module_name);
+        return $this->readFile($doc_file_path);
     }
 
     /**
