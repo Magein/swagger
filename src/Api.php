@@ -78,7 +78,7 @@ class Api
     }
 
     /**
-     * @param $doc_file_path
+     * @param $doc_path
      * @return array|mixed|bool
      */
     private function readFile($doc_path)
@@ -126,24 +126,27 @@ class Api
         /**
          * @param $url
          * @param $tag
+         * @param $method
          * @param $data
          */
-        $concat = function ($url, $tag, $data) use (&$swagger_data, $paths) {
-            $data['post'] = array_merge(['tags' => [$tag]], $data['post']);
+        $concat = function ($url, $tag, $data, $method) use (&$swagger_data, $paths) {
+            $param[$method] = array_merge(['tags' => [$tag]], $data[$method]);
             // 直接去掉前面的/ 在追加进去，防止文档中没有写
             $url = '/' . ltrim($url, '/');
-            $swagger_data[$paths][$url] = $data;
+            $swagger_data[$paths][$url] = $param;
         };
+
         foreach ($result as $file) {
 
             $file_info = pathinfo($file);
 
             $data = $this->getFileContents($file);
+            $method = array_keys($data)[0] ?? 'post';
 
-            if (isset($data['post'])) {
+            if (isset($data[$method])) {
                 $tag = pathinfo($file_info['dirname'], PATHINFO_BASENAME);
                 $url = $tag . '/' . $file_info['filename'];
-                $concat($url, $tag, $data);
+                $concat($url, $tag, $data, $method);
             } else {
                 foreach ($data as $key => $val) {
                     if ($key) {
@@ -155,7 +158,7 @@ class Api
                         } else {
                             $url = $key[0] . '/' . $key[1];
                         }
-                        $concat($url, $tag, $val);
+                        $concat($url, $tag, $val, $method);
                     }
                 }
             }
